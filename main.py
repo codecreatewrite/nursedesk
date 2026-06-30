@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from fastapi import FastAPI
 import database
 
@@ -5,6 +6,14 @@ app = FastAPI()
 
 database.create_table()
 database.seed_if_empty()
+
+class PatientInput(BaseModel):
+    name: str
+    age: int
+    ward: str
+    diagnosis: str
+    medication: str
+    is_critical: bool
 
 @app.get("/")
 def home():
@@ -40,3 +49,15 @@ def view_critical_patients():
             "diagnosis": diagnosis
         })
     return patients
+
+@app.post("/patients")
+def add_patient(patient: PatientInput):
+    database.insert_patient(
+        patient.name,
+        patient.age,
+        patient.ward,
+        patient.diagnosis,
+        patient.medication,
+        patient.is_critical
+    )
+    return {"message": "Patient added successfully"}

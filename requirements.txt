@@ -1,3 +1,14 @@
 fastapi
 uvicorn
-requests
+gunicorn
+pydantic
+python-multipart
+Jinja2
+sqlalchemy
+alembic
+psycopg2-binary
+python-dateutil
+python-jose[cryptography]
+pydantic-settings
+passlib[bcrypt]
+python-dotenv
