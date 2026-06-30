@@ -1,86 +1,56 @@
-from pydantic import BaseModel
-from fastapi import FastAPI, Header, HTTPException, Depends
 import database
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-API_KEY = os.getenv("NURSEDESK_API_KEY")
-
-app = FastAPI()
 
 database.create_table()
 database.seed_if_empty()
 
-class PatientInput(BaseModel):
-    name: str
-    age: int
-    ward: str
-    diagnosis: str
-    medication: str
-    is_critical: bool
+while True:
+    print("\n=== NURSEDESK MENU ===")
+    print("1. View all patients")
+    print("2. Add patient")
+    print("3. View critical alerts")
+    print("4. Exit")
 
-class StatusUpdate(BaseModel):
-    is_critical: bool
+    choice = input("Enter choice: ")
 
-def verify_key(x_api_key: str = Header(...)):
-    if x_api_key != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+    if choice == "1":
+        rows = database.get_all_patients()
+        for row in rows:
+            id, name, age, ward, diagnosis, medication, is_critical = row
+            print("=== PATIENT CARD ===")
+            print("Name:", name)
+            print("Age:", age)
+            print("Ward:", ward)
+            print("Diagnosis:", diagnosis)
+            print("Medication:", medication)
+            print("Status:", "Critical" if is_critical else "Stable")
+            print("")
+        print("=== SUMMARY ===")
+        print("Total Patients:", len(rows))
+        print("Critical:", database.count_patients_by_status(True))
+        print("Stable:", database.count_patients_by_status(False))
 
-@app.get("/")
-def home():
-    return {"message": "NurseDesk API is running"}
+    elif choice == "2":
+        name = input("Name: ")
+        age = int(input("Age: "))
+        ward = input("Ward: ")
+        diagnosis = input("Diagnosis: ")
+        medication = input("Medication: ")
+        critical_input = input("Critical? (yes/no): ")
+        is_critical = critical_input.lower() == "yes"
+        database.insert_patient(name, age, ward, diagnosis, medication, is_critical)
+        print("Patient added successfully.")
 
-@app.get("/patients")
-def view_patients(auth=Depends(verify_key)):
-    rows = database.get_all_patients()
-    patients = []
-    for row in rows:
-        id, name, age, ward, diagnosis, medication, is_critical = row
-        patients.append({
-            "id": id,
-            "name": name,
-            "age": age,
-            "ward": ward,
-            "diagnosis": diagnosis,
-            "medication": medication,
-            "is_critical": bool(is_critical)
-        })
-    return patients
+    elif choice == "3":
+        rows = database.get_critical_patients()
+        print("=== CRITICAL ALERTS ===")
+        if not rows:
+            print("No critical patients on ward.")
+        for row in rows:
+            print(row[1], "— Immediate attention required.")
 
-@app.get("/patients/critical")
-def view_critical_patients(auth=Depends(verify_key)):
-    rows = database.get_critical_patients()
-    patients = []
-    for row in rows:
-        id, name, age, ward, diagnosis, medication, is_critical = row
-        patients.append({
-            "id": id,
-            "name": name,
-            "ward": ward,
-            "diagnosis": diagnosis
-        })
-    return patients
+    elif choice == "4":
+        print("Goodbye.")
+        break
 
-@app.post("/patients")
-def add_patient(patient: PatientInput, auth=Depends(verify_key)):
-    database.insert_patient(
-        patient.name,
-        patient.age,
-        patient.ward,
-        patient.diagnosis,
-        patient.medication,
-        patient.is_critical
-    )
-    return {"message": "Patient added successfully"}
-
-@app.put("/patients/{patient_id}")
-def update_patient(patient_id: int, status: StatusUpdate, auth=Depends(verify_key)):
-    database.update_patient_status(patient_id, status.is_critical)
-    return {"message": f"Patient {patient_id} status updated"}
-
-@app.delete("/patients/{patient_id}")
-def discharge_patient(patient_id: int, auth=Depends(verify_key)):
-    database.delete_patient(patient_id)
-    return {"message": f"Patient {patient_id} discharged"}
+    else:
+        print("Invalid choice. Try again.")
