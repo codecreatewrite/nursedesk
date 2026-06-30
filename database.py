@@ -74,3 +74,19 @@ def count_patients_by_status(is_critical):
     count = cursor.fetchone()[0]
     conn.close()
     return count
+
+def update_patient_status(is_critical, patient_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+            "UPDATE patients SET is_critical = ? WHERE id = ?", (int(is_critical), patient_id)
+    )
+    conn.commit()
+    conn.close()
+
+def delete_patient(patient_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM patients WHERE id = ?", (patient_id,))
+    conn.commit()
+    conn.close()

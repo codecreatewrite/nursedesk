@@ -15,6 +15,9 @@ class PatientInput(BaseModel):
     medication: str
     is_critical: bool
 
+class StatusUpdate(BaseModel):
+    is_critical: bool
+
 @app.get("/")
 def home():
     return {"message": "NurseDesk API is running"}
@@ -61,3 +64,13 @@ def add_patient(patient: PatientInput):
         patient.is_critical
     )
     return {"message": "Patient added successfully"}
+
+@app.put("/patients/{patient_id}")
+def update_patient(patient_id: int, status: StatusUpdate):
+    database.update_patient_status(patient_id, status.is_critical)
+    return {"message": f"Patient {patient_id} status updated"}
+
+@app.delete("/patients/{patient_id}")
+def discharge_patient(patient_id: int):
+    database.delete_patient(patient_id)
+    return {"message": f"Patient {patient_id} discharged"}
