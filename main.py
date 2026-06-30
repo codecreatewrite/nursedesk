@@ -1,6 +1,12 @@
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException, Depends
 import database
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("NURSEDESK_API_KEY")
 
 app = FastAPI()
 
@@ -18,12 +24,16 @@ class PatientInput(BaseModel):
 class StatusUpdate(BaseModel):
     is_critical: bool
 
+def verify_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
 @app.get("/")
 def home():
     return {"message": "NurseDesk API is running"}
 
 @app.get("/patients")
-def view_patients():
+def view_patients(auth=Depends(verify_key)):
     rows = database.get_all_patients()
     patients = []
     for row in rows:
@@ -40,7 +50,7 @@ def view_patients():
     return patients
 
 @app.get("/patients/critical")
-def view_critical_patients():
+def view_critical_patients(auth=Depends(verify_key)):
     rows = database.get_critical_patients()
     patients = []
     for row in rows:
@@ -54,7 +64,7 @@ def view_critical_patients():
     return patients
 
 @app.post("/patients")
-def add_patient(patient: PatientInput):
+def add_patient(patient: PatientInput, auth=Depends(verify_key)):
     database.insert_patient(
         patient.name,
         patient.age,
@@ -66,11 +76,11 @@ def add_patient(patient: PatientInput):
     return {"message": "Patient added successfully"}
 
 @app.put("/patients/{patient_id}")
-def update_patient(patient_id: int, status: StatusUpdate):
+def update_patient(patient_id: int, status: StatusUpdate, auth=Depends(verify_key)):
     database.update_patient_status(patient_id, status.is_critical)
     return {"message": f"Patient {patient_id} status updated"}
 
 @app.delete("/patients/{patient_id}")
-def discharge_patient(patient_id: int):
+def discharge_patient(patient_id: int, auth=Depends(verify_key)):
     database.delete_patient(patient_id)
     return {"message": f"Patient {patient_id} discharged"}
