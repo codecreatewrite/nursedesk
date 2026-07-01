@@ -18,6 +18,10 @@ def create_table():
             is_critical INTEGER
         )
     """)
+    try:
+        cursor.execute("ALTER TABLE patients ADD COLUMN status TEXT DEFAULT 'active'")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -26,7 +30,7 @@ def insert_patient(name, age, ward, diagnosis, medication, is_critical):
     cursor = conn.cursor()
     cursor.execute(
         "INSERT INTO patients (name, age, ward, diagnosis, medication, is_critical) VALUES (?, ?, ?, ?, ?, ?)",
-        (name, age, ward, diagnosis, medication, int(is_critical))
+        (name, age, ward, diagnosis, medication, int(is_critical),)
     )
     conn.commit()
     conn.close()
@@ -34,8 +38,17 @@ def insert_patient(name, age, ward, diagnosis, medication, is_critical):
 def get_all_patients():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM patients")
+    cursor.execute("SELECT * FROM patients WHERE status = ?", ("active",))
     rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+def get_discharged_patients():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM patients WHERE status = ?", ("discharged",))
+    rows = cursor.fetchall()
+    conn.commit()
     conn.close()
     return rows
 
@@ -84,9 +97,9 @@ def update_patient_status(is_critical, patient_id):
     conn.commit()
     conn.close()
 
-def delete_patient(patient_id):
+def discharge_patient(patient_id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM patients WHERE id = ?", (patient_id,))
+    cursor.execute("UPDATE patients SET status = ? WHERE id = ?", ("discharged", patient_id))
     conn.commit()
     conn.close()

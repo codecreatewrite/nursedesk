@@ -37,7 +37,7 @@ def view_patients(auth=Depends(verify_key)):
     rows = database.get_all_patients()
     patients = []
     for row in rows:
-        id, name, age, ward, diagnosis, medication, is_critical = row
+        id, name, age, ward, diagnosis, medication, is_critical, status = row
         patients.append({
             "id": id,
             "name": name,
@@ -45,7 +45,8 @@ def view_patients(auth=Depends(verify_key)):
             "ward": ward,
             "diagnosis": diagnosis,
             "medication": medication,
-            "is_critical": bool(is_critical)
+            "is_critical": bool(is_critical),
+            "status": status
         })
     return patients
 
@@ -62,6 +63,22 @@ def view_critical_patients(auth=Depends(verify_key)):
             "diagnosis": diagnosis
         })
     return patients
+
+@app.get("/patients/discharged")
+def view_discharged_patients(auth=Depends(verify_key)):
+    rows = database.get_discharged_patients()
+    patients = []
+    for row in rows:
+        id, name, age, ward, diagnosis, medication, is_critical, status = row
+        patients.append({
+            "id": id,
+            "name": name,
+            "age": age,
+            "ward": ward,
+            "diagnosis": diagnosis,
+            "status": status
+        })
+        return patients
 
 @app.post("/patients")
 def add_patient(patient: PatientInput, auth=Depends(verify_key)):
@@ -82,5 +99,5 @@ def update_patient(patient_id: int, status: StatusUpdate, auth=Depends(verify_ke
 
 @app.delete("/patients/{patient_id}")
 def discharge_patient(patient_id: int, auth=Depends(verify_key)):
-    database.delete_patient(patient_id)
+    database.discharge_patient(patient_id)
     return {"message": f"Patient {patient_id} discharged"}
