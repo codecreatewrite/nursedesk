@@ -48,7 +48,6 @@ def get_discharged_patients():
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM patients WHERE status = ?", ("discharged",))
     rows = cursor.fetchall()
-    conn.commit()
     conn.close()
     return rows
 
@@ -66,7 +65,6 @@ def seed_if_empty():
     cursor.execute("SELECT COUNT(*) FROM patients")
     count = cursor.fetchone()[0]
     conn.close()
-    print(count)
 
     if count == 0:
         print("Database empty. Seeding from JSON...")

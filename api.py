@@ -76,9 +76,11 @@ def view_discharged_patients(auth=Depends(verify_key)):
             "age": age,
             "ward": ward,
             "diagnosis": diagnosis,
+            "medication": medication,
+            "is_critical": bool(is_critical),
             "status": status
         })
-        return patients
+    return patients
 
 @app.post("/patients")
 def add_patient(patient: PatientInput, auth=Depends(verify_key)):
