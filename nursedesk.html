@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NurseDesk</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #2c3e50;
+      }
+
+      .patient-card {
+        background: white;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+      }
+
+      .critical {
+        border-left-color: #e74c3c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NurseDesk</h1>
+    <p>Ward Patient Dashboard</p>
+    <button id="loadBtn">Load Patients</button>
+    <div id="patientList"></div>
+    <script>
+      document.getElementById("loadBtn").addEventListener("click", async function() {
+      const response = await fetch("https://nursedesk.onrender.com/patients", {
+        headers: {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJudXJzZTEiLCJyb2xlIjoibnVyc2UiLCJleHAiOjE3ODI5NjY2NDh9.PjnEiwuIJivHsk_1xuCDgCdXBGpGLqIBE9WImmzR74g"
+        }
+      });
+
+      const patients = await response.json();
+      const container = document.getElementById("patientList");
+      container.innerHTML = "";
+
+      patients.forEach(function(patient) {
+        const card = document.createElement("div");
+        card.className = "patient-card" + (patient.is_critical ? " critical" : "");
+        card.innerHTML = `
+          <strong>${patient.name}</strong> — ${patient.ward}<br>
+          Diagnosis: ${patient.diagnosis}<br>
+          Status: ${patient.is_critical ? "⚠ Critical" : "Stable"}
+        `;
+        container.appendChild(card);
+      });
+    });
+    </script>
+  </body>
+</html>

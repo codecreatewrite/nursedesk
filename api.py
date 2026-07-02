@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from fastapi import FastAPI, Header, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 import database
 import os
 from dotenv import load_dotenv
@@ -11,6 +12,12 @@ load_dotenv()
 API_KEY = os.getenv("NURSEDESK_API_KEY")
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 database.create_table()
 database.seed_if_empty()
