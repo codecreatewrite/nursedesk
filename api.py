@@ -14,6 +14,7 @@ app = FastAPI()
 
 database.create_table()
 database.seed_if_empty()
+database.seed_users()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
