@@ -25,6 +25,12 @@ def create_table():
     conn.commit()
     conn.close()
 
+def seed_users():
+    from auth import hash_password
+    create_users_table()
+    create_user("admin", hash_password("admin123"), "admin")
+    create_user("nurse1", hash_password("nurse123"), "nurse")
+
 def insert_patient(name, age, ward, diagnosis, medication, is_critical):
     conn = get_connection()
     cursor = conn.cursor()
@@ -101,3 +107,38 @@ def discharge_patient(patient_id):
     cursor.execute("UPDATE patients SET status = ? WHERE id = ?", ("discharged", patient_id))
     conn.commit()
     conn.close()
+
+def create_users_table():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            hashed_password TEXT,
+            role TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def create_user(username, hashed_password, role="nurse"):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)",
+            (username, hashed_password, role)
+        )
+        conn.commit()
+    except Exception as e:
+        print("User already exists:", e)
+    conn.close()
+
+def get_user(username):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    conn.close()
+    return row
