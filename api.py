@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import auth
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 load_dotenv()
 
@@ -24,6 +26,8 @@ database.seed_if_empty()
 database.seed_users()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class PatientInput(BaseModel):
     name: str
@@ -50,6 +54,14 @@ def require_admin(current_user=Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
+@app.get("/app")
+def serve_dashboard():
+    return FileResponse("static/nursedesk.html")
+
+@app.get("/login")
+def serve_login():
+    return FileResponse("static/nursedesk_login.html")
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
