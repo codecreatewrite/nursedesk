@@ -165,7 +165,7 @@
     async function loadPatients() {
       const token = localStorage.getItem("token");
       if (!token) {
-        window.location.href = "nursedesk_login.html"
+        window.location.href = "/static/nursedesk_login.html"
       }
       const response = await fetch("/patients", {
         headers: { "Authorization": "Bearer " + token }

@@ -19,7 +19,7 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     localStorage.setItem("token", data.access_token);
     messageDiv.style.color = "green";
     messageDiv.textContent = "Login successful. Redirecting...";
-    window.location.href = "nursedesk.html";
+    window.location.href = "/static/nursedesk.html";
   } else {
     messageDiv.style.color = "red";
     messageDiv.textContent = "Invalid username or password.";
