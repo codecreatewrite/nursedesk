@@ -13,16 +13,18 @@
       padding: 20px;
     }
 
-    header {
+    .main-header {
       background: #2c3e50;
       color: white;
       padding: 16px 20px;
       border-radius: 10px;
       margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
     }
 
-    header h1 { font-size: 22px; }
-    header p { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+    .main-header h1 { font-size: 22px; }
+    .main-header p { font-size: 13px; opacity: 0.7; margin-top: 4px; }
 
     #summary {
       display: flex;
@@ -53,7 +55,7 @@
 
     .stat-box.critical-box .number { color: #e74c3c; }
 
-    button {
+    #loadBtn {
       background: #2c3e50;
       color: white;
       border: none;
@@ -66,6 +68,13 @@
     }
 
     button:active { opacity: 0.8; }
+
+    #logoutBtn {
+      color: red;
+      font-size: 15px;
+      padding: 5px;
+      border-radius: 10px;
+    }
 
     .patient-card {
       background: white;
@@ -121,9 +130,14 @@
 </head>
 <body>
 
-  <header>
-    <h1>NurseDesk</h1>
-    <p>Ward Patient Dashboard</p>
+  <header class="main-header">
+    <div class="text-header">
+      <h1>NurseDesk</h1>
+      <p>Ward Patient Dashboard</p>
+    </div>
+    <div class="logout">
+      <button type="button", id="logoutBtn">Logout</button>
+    </div>
   </header>
 
   <div id="summary">
@@ -141,27 +155,48 @@
     </div>
   </div>
 
-  <button id="loadBtn">Load Patients</button>
+  <button id="loadBtn">Load Patients</button><br>
+  <h3>Critical Alerts</h3>
+  <div id="criticalAlerts"></div><br>
+  <h3>Patient List</h3>
   <div id="patientList"></div>
 
   <script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "nursedesk_login.html"
-    }
-    document.getElementById("loadBtn").addEventListener("click", async function () {
+    async function loadPatients() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "nursedesk_login.html"
+      }
       const response = await fetch("https://nursedesk.onrender.com/patients", {
-        headers: { "Authorization": "Bearer " + TOKEN }
+        headers: { "Authorization": "Bearer " + token }
       });
 
       const patients = await response.json();
+      const criticalPatients = patients.filter(p => p.is_critical);
+
       const container = document.getElementById("patientList");
       container.innerHTML = "";
+      const containerCritical = document.getElementById("criticalAlerts");
+      containerCritical.innerHTML = "";
+
+      criticalPatients.forEach(function (patient) {
+        const criticalCard = document.createElement("div");
+        criticalCard.className = "patient-card critical";
+        const badgeClass = "badge-critical";
+        const badgeText = "⚠ Critical";
+        criticalCard.innerHTML = `
+        <div class="patient-name">${patient.name}</div>
+        <div class="patient-ward">${patient.ward}</div>
+        <span class="status-badge ${badgeClass}">${badgeText}</span>
+        `
+        containerCritical.appendChild(criticalCard)
+      });
 
       let criticalCount = 0;
 
       patients.forEach(function (patient) {
-        if (patient.is_critical) criticalCount++;
+        if (patient.is_critical)
+        criticalCount++;
 
         const card = document.createElement("div");
         card.className = "patient-card" + (patient.is_critical ? " critical" : "");
@@ -183,8 +218,19 @@
       document.getElementById("totalCount").textContent = patients.length;
       document.getElementById("criticalCount").textContent = criticalCount;
       document.getElementById("stableCount").textContent = patients.length - criticalCount;
+    };
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (localStorage.getItem("token")) {
+        await loadPatients();
+      }
+    });
+    document.getElementById("loadBtn").addEventListener("click", async () => {
+      await loadPatients();
+    });
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      window.location.href = "nursedesk_login.html"
     });
   </script>
-
 </body>
 </html>
