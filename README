@@ -1,0 +1,101 @@
+# NurseDesk
+
+A ward patient dashboard built for nurses — 
+giving them the right information at the right 
+time so they can make better clinical decisions 
+faster.
+
+## The Problem
+
+At shift handover, nurses rely on verbal 
+briefings from the leaving nurse and manual 
+review of patient files to build a picture of 
+the ward. This process is cognitively expensive:
+information gets omitted, details get forgotten,
+and time that should go to patients goes to 
+hunting for data instead.
+
+NurseDesk exists to fix that. One screen. Full 
+ward overview. Critical patients surfaced 
+immediately.
+
+## The Solution
+
+Open NurseDesk at the start of a shift and the 
+dashboard loads automatically — all patients, 
+their conditions, medications, and status. 
+Critical patients are flagged at the top before 
+anything else. No digging through files. No 
+relying on memory.
+
+## Features
+
+- Secure login with role-based access 
+  (nurse and admin roles)
+- Auto-loading ward dashboard on sign-in
+- Critical alerts section — flags urgent 
+  patients immediately at the top
+- Full patient cards — condition, medication, 
+  ward, age group
+- Ward summary — total, critical, and stable 
+  counts at a glance
+- Discharge management that preserves patient 
+  records for continuity
+
+## Technical Architecture
+
+- **Backend:** Python, FastAPI, SQLite
+- **Auth:** JWT tokens, bcrypt password hashing,
+  role-based access control
+- **Frontend:** HTML, CSS, JavaScript
+- **Deployment:** Render (API + static frontend)
+
+## Design Decisions
+
+**Soft discharge instead of hard delete**
+Healthcare requires continuity. A discharged 
+patient's history — diagnoses, medications, 
+previous admissions — directly informs future 
+care decisions. Deleting records breaks that 
+chain. Discharged patients are marked inactive 
+and filtered from the active ward view, but 
+remain in the database for reference.
+
+**Role-based access control**
+A ward has hierarchy for good reason. Nurses 
+need to view and update. Admins manage patient 
+records. Mixing those permissions creates 
+accountability gaps and security risk. Every 
+action in NurseDesk is traceable to a specific 
+user — which matters in a healthcare context 
+where audit trails are not optional.
+
+**Data model**
+Patient data is stored relationally with clear 
+status fields rather than derived state. 
+is_critical is explicit, not calculated. Status 
+(active/discharged) is a first-class field, not 
+inferred from the absence of data. This makes 
+queries simple and the system's state always 
+readable at a glance.
+
+## Live Demo
+
+https://nursedesk.onrender.com/login
+
+Demo credentials:
+- Username: `nurse1`
+- Password: `nurse123`
+
+## Running Locally
+
+```bash
+git clone https://github.com/codecreatewrite/nursedesk
+cd nursedesk
+pip install fastapi uvicorn sqlite3 python-jose \
+    passlib[bcrypt] python-dotenv aiofiles
+Create a .env file:
+SECRET_KEY=your_secret_key_here
+Run:
+uvicorn api:app --reload
+Visit http://localhost:8000/login
